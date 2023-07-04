@@ -1,0 +1,48 @@
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+#Define location for ease of use
+
+location = '/Users/ronannovosel/Downloads/reaction_data.csv'
+
+
+# Load the data
+data = pd.read_csv(location)
+
+# Split the Reagent column into multiple columns
+reagents = data['Reagent'].str.split(';', expand=True)
+
+# Rename the new columns
+reagents.columns = [f'Reagent {i+1}' for i in range(reagents.shape[1])]
+
+# Concatenate the new columns with the original data
+data = pd.concat([data, reagents], axis=1)
+
+# Drop the original Reagent column
+data = data.drop('Reagent', axis=1)
+
+# One-hot encode the reagent columns
+data = pd.get_dummies(data, columns=reagents.columns)
+
+# Split the data into features and target
+X = data.drop('Yield', axis=1)
+y = data['Yield']
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Create a random forest regressor
+model = RandomForestRegressor()
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = model.predict(X_test)
+
+# Evaluate the model
+score = model.score(X_test, y_test)
+print(f'Test score: {score:.2f}')
+
+
