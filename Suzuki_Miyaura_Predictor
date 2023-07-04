@@ -1,16 +1,53 @@
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
 import pandas as pd
 
-#Define location for ease of use
-
+# Define location for ease of use
 location = '/Users/ronannovosel/Downloads/reaction_data.csv'
 
-
 # Load the data
-data = pd.read_csv(location)
+data = pd.read_csv(location, encoding='latin1', sep=',')
 
-# Split the Reagent column into multiple columns
+# Remove rows with missing values in the 'Time' column
+data = data.dropna(subset=['Time '])
+
+# One-hot encode the 'Reaction' column
+data = pd.get_dummies(data, columns=['Reaction'])
+# One-hot encode the column
+data = pd.get_dummies(data, columns=['Reagent'])
+
+# Define a function to split values like '8; 10' into multiple rows
+def split_values(row, column):
+    value = row[column]
+    if isinstance(value, str):
+        if ';' in value:
+            values = [float(x) for x in value.split(';')]
+            return [row.to_dict() | {column: v} for v in values]
+        elif '-' in value:
+            values = [float(x) for x in value.split('-')]
+            avg_value = sum(values) / len(values)
+            return [row.to_dict() | {column: avg_value}]
+    return [row.to_dict()]
+
+# Apply the function to each row of the data
+rows = data.apply(lambda row: split_values(row, 'Temperature '), axis=1).explode().tolist()
+
+# Create a new DataFrame from the resulting rows
+data = pd.DataFrame(rows)
+
+# Apply the function to each row of the new data
+rows = data.apply(lambda row: split_values(row, 'Time '), axis=1).explode().tolist()
+
+# Create a new DataFrame from the resulting rows
+data = pd.DataFrame(rows)
+
+# Check the data type of the 'Reagent' column
+if data['Reagent'].dtype != 'object':
+    # Convert the 'Reagent' column to string
+    data['Reagent'] = data['Reagent'].astype(str)
+
+# Split the 'Reagent' column into multiple columns
 reagents = data['Reagent'].str.split(';', expand=True)
 
 # Rename the new columns
@@ -19,11 +56,22 @@ reagents.columns = [f'Reagent {i+1}' for i in range(reagents.shape[1])]
 # Concatenate the new columns with the original data
 data = pd.concat([data, reagents], axis=1)
 
-# Drop the original Reagent column
-data = data.drop('Reagent', axis=1)
+catalysts = data['Catalyst'].str.split(';', expand=True)
+catalysts.columns = [f'Catalyst {i+1}' for i in range(catalysts.shape[1])]
 
-# One-hot encode the reagent columns
-data = pd.get_dummies(data, columns=reagents.columns)
+data = pd.concat([data, catalysts], axis=1)
+
+solvents = data['Solvent'].str.split(';', expand=True)
+solvents.columns = [f'Solvent {i+1}' for i in range(solvents.shape[1])]
+
+data = pd.concat([data, solvents], axis=1)
+
+# Drop the original 'Catalyst' and 'Solvent' columns
+data = data.drop(['Catalyst', 'Solvent'], axis=1)
+
+# One-hot encode the catalyst and solvent columns
+data = pd.get_dummies(data, columns=catalysts.columns)
+data = pd.get_dummies(data, columns=solvents.columns)
 
 # Split the data into features and target
 X = data.drop('Yield', axis=1)
@@ -31,6 +79,16 @@ y = data['Yield']
 
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Create a SimpleImputer instance
+imputer = SimpleImputer(strategy='mean')
+
+# Fit the imputer on the training data
+imputer.fit(X_train)
+
+# Transform the training and test data
+X_train = imputer.transform(X_train)
+X_test = imputer.transform(X_test)
 
 # Create a random forest regressor
 model = RandomForestRegressor()
@@ -44,5 +102,4 @@ y_pred = model.predict(X_test)
 # Evaluate the model
 score = model.score(X_test, y_test)
 print(f'Test score: {score:.2f}')
-
 
