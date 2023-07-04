@@ -18,6 +18,8 @@ data = pd.get_dummies(data, columns=['Reaction'])
 data = pd.get_dummies(data, columns=['Reagent'])
 
 # Define a function to split values like '8; 10' into multiple rows
+
+
 def split_values(row, column):
     value = row[column]
     if isinstance(value, str):
@@ -30,14 +32,17 @@ def split_values(row, column):
             return [row.to_dict() | {column: avg_value}]
     return [row.to_dict()]
 
+
 # Apply the function to each row of the data
-rows = data.apply(lambda row: split_values(row, 'Temperature '), axis=1).explode().tolist()
+rows = data.apply(lambda row: split_values(
+    row, 'Temperature '), axis=1).explode().tolist()
 
 # Create a new DataFrame from the resulting rows
 data = pd.DataFrame(rows)
 
 # Apply the function to each row of the new data
-rows = data.apply(lambda row: split_values(row, 'Time '), axis=1).explode().tolist()
+rows = data.apply(lambda row: split_values(
+    row, 'Time '), axis=1).explode().tolist()
 
 # Create a new DataFrame from the resulting rows
 data = pd.DataFrame(rows)
@@ -102,4 +107,3 @@ y_pred = model.predict(X_test)
 # Evaluate the model
 score = model.score(X_test, y_test)
 print(f'Test score: {score:.2f}')
-
