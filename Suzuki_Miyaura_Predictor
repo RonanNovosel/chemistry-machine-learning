@@ -1,109 +1,272 @@
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
-import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Define location for ease of use
-location = '/Users/ronannovosel/Downloads/reaction_data.csv'
+# Define the column names
+column_names = ['Reaction', 'Time', 'Temperature', 'Yield', 'Reagent', 'Catalyst', 'Solvent']
 
-# Load the data
-data = pd.read_csv(location, encoding='latin1', sep=',')
+# Define the data array
+data_array = [
+    column_names,
+         ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '0.75', '35', 98.0, 'sodium carbonate', 'palladium diacetate', 'water; acetone'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '1', '20', 98.0, 'caesium carbonate', '', 'water; acetonitrile'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '2', '60', 98.0, 'potassium carbonate', '', 'ethanol; water'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '0.166667', '20', 97.0, 'palladium diacetate; potassium carbonate', '', 'water; isopropyl alcohol'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '0.25', '20', 96.0, 'palladium diacetate; potassium carbonate; urea', '', 'water; isopropyl alcohol'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '2', '100', 91.0, 'palladium on activated charcoal', '', ''] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '18', '80', 81.9, 'C14H8F6O4; nickel trifluoroacetate; potassium carbonate; triphenylphosphine; 1-butyl-3-methylimidazolium trifluoromethanesulfonimide', '', 'water'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '2', '80', 81.0, 'potassium carbonate', '', 'ethanol'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '1.5', '80', 80.0, 'potassium carbonate', '', 'water; N,N-dimethyl-formamide'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC=C(C=C1)C(F)(F)F>>FC(F)(F)C1=CC=C(C=C1)C1=CC=C(C=C1)C#N', '3', '65', 66.0, 'bromomethyl phenyl sulfoxide; palladium diacetate; cesium fluoride; tris-(o-tolyl)phosphine', '', 'tetrahydrofuran'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC(=CC=C1)N(=O)=O>>O=N(=O)C1=CC=CC(=C1)C1=CC=C(C=C1)C#N', '0.166667', '120', 96.0, 'tetra-butylammonium acetate', 'Pd EnCat-30TM', 'ethanol'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC(=CC=C1)N(=O)=O>>O=N(=O)C1=CC=CC(=C1)C1=CC=C(C=C1)C#N', '36', '30', 95.0, 'potassium carbonate', '', 'ethanol; water'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC(=CC=C1)N(=O)=O>>O=N(=O)C1=CC=CC(=C1)C1=CC=C(C=C1)C#N', '10', '20', 92.0, 'caesium carbonate', 'trans-diacetylpalladium(II) bis(dicyclohexylamine)', '1,4-dioxane'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC(=CC=C1)N(=O)=O>>O=N(=O)C1=CC=CC(=C1)C1=CC=C(C=C1)C#N', '2', '20', 90.0, 'potassium phosphate', 'palladium diacetate', 'ethanol'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC(=CC=C1)N(=O)=O>>O=N(=O)C1=CC=CC(=C1)C1=CC=C(C=C1)C#N', '3', '40 - 45', 90.0, 'potassium carbonate', '', 'methanol; water'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC(=CC=C1)N(=O)=O>>O=N(=O)C1=CC=CC(=C1)C1=CC=C(C=C1)C#N', '4.5', '60', 89.0, 'potassium carbonate', '', 'ethanol; water'] ,
+     ['BrC1=CC=C(C=C1)C#N.OB(O)C1=CC(=CC=C1)N(=O)=O>>O=N(=O)C1=CC=CC(=C1)C1=CC=C(C=C1)C#N', '5', '80', 83.0, 'potassium carbonate', '', 'ethanol'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '24', '90', 94.0, 'potassium phosphate; tetraphosphine N,N,N′,N′-tetra(diphenylphosphinomethyl)-pyridine-2,6-diamine; palladium dichloride', '', 'o-xylene'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '5', '100', 92.0, '1-(2,6-diisopropylphenyl)-3-(2-oxo-2-(2,4,6-tri-tert-butylphenylamino)ethyl)-1H-imidazol-3-ium bromide; palladium diacetate; potassium carbonate', '', 'dichloromethane; toluene'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '20', '90', 91.0, 'potassium carbonate; (1RS,2RS,3SR,4SR)-1,2,3,4-tetrakis((diphenylphosphanyl)methyl)cyclopentane', 'bis(η3-allyl-μ-chloropalladium(II))', 'xylene'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '20', '90', 91.0, 'potassium carbonate', '[Pd(C3H5)Cl]2/Tedycip complex', 'xylene'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '2', '90', 85.0, 'potassium phosphate', 'tetrakis(triphenylphosphine) palladium(0)', '1,4-dioxane; water'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '2', '90', 85.0, 'potassium phosphate; water', 'tetrakis(triphenylphosphine) palladium(0)', '1,4-dioxane'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '8; 10', '80; 100', 82.0, 'potassium phosphate', '', '1,2-dimethoxyethane; 1,2-dimethoxyethane; water'] ,
+     ['BrC1=COC=C1.OB(O)C1=CC=CC=C1>>O1C=CC(=C1)C1=CC=CC=C1', '0.25', '20', 69.0, '[(t-Bu)3PH]BF4; palladium diacetate; sodium hydroxide', '', 'water; butan-1-ol'] ,
+     ['OC(=O)C1=CC=C(I)C=C1.COC1=CC=C(C=C1)B(O)O>>COC1=CC=C(C=C1)C1=CC=C(C=C1)C(O)=O', '0.666667', '', 99.0, 'potassium carbonate', 'dichlorobis(4-pyridinaldoxime)palladium(II)', 'water'] ,
+     ['OC(=O)C1=CC=C(I)C=C1.COC1=CC=C(C=C1)B(O)O>>COC1=CC=C(C=C1)C1=CC=C(C=C1)C(O)=O', '5', '100', 99.0, 'potassium fluoride; potassium carbonate', '', 'water'] ,
+     ['OC(=O)C1=CC=C(I)C=C1.COC1=CC=C(C=C1)B(O)O>>COC1=CC=C(C=C1)C1=CC=C(C=C1)C(O)=O', '6', '80', 95.0, 'caesium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', '1,2-dimethoxyethane; water'] ,
+     ['OC(=O)C1=CC=C(I)C=C1.COC1=CC=C(C=C1)B(O)O>>COC1=CC=C(C=C1)C1=CC=C(C=C1)C(O)=O', '24', '100', 92.0, 'recombinant Thermosynechococcus elongatus Dps protein stabilized palladium nanoparticle', '', ''] ,
+     ['OC(=O)C1=CC=C(I)C=C1.COC1=CC=C(C=C1)B(O)O>>COC1=CC=C(C=C1)C1=CC=C(C=C1)C(O)=O', '1', '110', 89.0, 'Pd/C; potassium carbonate', '', 'water'] ,
+     ['OC(=O)C1=CC=C(I)C=C1.COC1=CC=C(C=C1)B(O)O>>COC1=CC=C(C=C1)C1=CC=C(C=C1)C(O)=O', '4', '80', 78.0, 'sodium hydrogencarbonate', '', 'water'] ,
+     ['OC(=O)C1=CC=C(I)C=C1.COC1=CC=C(C=C1)B(O)O>>COC1=CC=C(C=C1)C1=CC=C(C=C1)C(O)=O', '0.0833333', '20', '', 'potassium hydroxide', 'palladium dichloride', 'water'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '2.5', '110', 93.0, 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate', '', '1,4-dioxane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '0.5; 20', '90', 92.0, 'potassium carbonate; tetrakis-(triphenylphosphine)-palladium', '', '1,4-dioxane; lithium hydroxide monohydrate; 1,4-dioxane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '18', '80', 90.0, 'potassium carbonate', 'tetrakis-(triphenylphosphine)-palladium; tris-(o-tolyl)phosphine', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '5', '90', 87.0, 'tetrakis-(triphenylphosphine)-palladium; anhydrous sodium carbonate', '', '1,4-dioxane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '4.5', '', 82.0, 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate; tris-(o-tolyl)phosphine', '', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '0.5', '80', 81.0, 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate; tris-(o-tolyl)phosphine', '', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '16', '110', 74.0, 'tetrakis-(triphenylphosphine)-palladium; anhydrous sodium carbonate', '', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '16', '110', 74.0, 'tetrakis-(triphenylphosphine)-palladium; anhydrous sodium carbonate', '', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '20', '90', 73.0, 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate; Tri(p-tolyl)phosphine', '', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '16', '', 66.0, 'tetrakis-(triphenylphosphine)-palladium; anhydrous sodium carbonate', '', 'ethanol; lithium hydroxide monohydrate; toluene'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '15', '', 60.0, 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate', '', 'tetrahydrofuran'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '', '110', 53.0, 'anhydrous sodium carbonate', 'tetrakis-(triphenylphosphine)-palladium', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '20', '', '', 'potassium carbonate', 'tetrakis-(triphenylphosphine)-palladium', '1,4-dioxane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '', '', '', 'potassium carbonate', 'tetrakis-(triphenylphosphine)-palladium', 'tetrahydrofuran'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '', '', '', 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate', '', 'tetrahydrofuran'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '5', '100', '', 'palladium diacetate; anhydrous sodium carbonate; triphenylphosphine', '', 'lithium hydroxide monohydrate; dimethyl sulfoxide'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '0.5; 20', '', '', 'potassium carbonate; tetrakis-(triphenylphosphine)-palladium', '', '1,4-dioxane; lithium hydroxide monohydrate; 1,4-dioxane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '12', '80', '', 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate; tris-(o-tolyl)phosphine', '', '1,2-dimethoxyethane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '18', '100', '', 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate', '', '1,4-dioxane; lithium hydroxide monohydrate'] ,
+     ['OB(O)C1=CC=CS1.CC(C)(C)OC(=O)NC1=C(C=C(Br)C=C1)N(=O)=O>>CC(C)(C)OC(=O)NC1=C(C=C(C=C1)C1=CC=CS1)N(=O)=O', '', '', '', 'tetrakis-(triphenylphosphine)-palladium; anhydrous sodium carbonate', '', '1,2-dimethoxyethane'] ,
+     ['', '', '120', 88.0, 'sodium hydrogencarbonate', '', 'N,N-dimethyl-formamide'] ,
+     ['', '24', '120', 61.0, 'Bedford’s palladacycle; potassium carbonate; methoxybenzene', '', ''] ,
+     ['', '24', '100', '', 'N,N,N,N,-tetramethylethylenediamine; Hexadecane; palladium diacetate; catacxium A', '', 'toluene'] ,
+     ['', '24', '80', '', 'potassium carbonate', '', ''] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '9', '84 - 88', 91.11, 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', '1,4-dioxane; water'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '7', '', 85.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'water; toluene'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '24', '', 84.0, 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', 'toluene'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '24', '', 84.0, 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', ''] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '6', '', 81.0, 'tetrakis(triphenylphosphine) palladium(0); sodium hydroxide', '', 'tetrahydrofuran; water'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '24', '', 79.0, 'barium dihydroxide; tetrakis(triphenylphosphine) palladium(0)', '', '1,4-dioxane; water'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '22', '', 79.0, 'barium dihydroxide', 'tetrakis(triphenylphosphine) palladium(0)', '1,4-dioxane; water'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '24', '', 77.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'water'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '8', '40', 75.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'ethanol; water; toluene'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '24', '', 75.0, 'potassium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'tetrahydrofuran'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '20', '90', 67.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'water; toluene'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '6', '90', 61.0, 'potassium carbonate', 'palladium diacetate; tris-(o-tolyl)phosphine', 'ethanol; water; toluene'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '3', '90', 60.0, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'ethanol; water; toluene'] ,
+     ['BrC1=CC=C(I)C=C1.OB(O)C1=CC2=CC=CC=C2C=C1>>BrC1=CC=C(C=C1)C1=CC2=C(C=CC=C2)C=C1', '4', '120', 35.0, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'ethanol; water; toluene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '1', '20', 95.0, 'O4P(3-)*3K(1+)*5H2O; tri(1-adamantyl)phosphine; C28H26N2O8Pd2S2', '', 'tetrahydrofuran'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '1', '20', 95.0, 'O4P(3-)*3K(1+)*5H2O; tri(1-adamantyl)phosphine; {2-[((acetyl-κO)amino)phenyl-κC](tri-1-adamantylphosphine)palladium}(p-toluenesulfonate)', '', 'tetrahydrofuran'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '12', '60', 88.0, 'sodium carbonate', '', 'ethanol; benzene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '2', '20', 87.0, 'Pd(dtbpf)Cl2; triethylamine', '', 'water'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '24', '65', 86.8, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'tetrahydrofuran'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '', 84.9, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', '1,2-dimethoxyethane; ethanol; water'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '75', 84.3, 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', 'toluene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '15', '85', 81.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'ethanol; benzene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '7', '80; 70', 80.0, 'potassium phosphate; sodium cyanide', 'tetrakis(triphenylphosphine) palladium(0)', '1,4-dioxane; water; 1,4-dioxane; water'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '7', '80', 80.0, 'potassium phosphate; sodium cyanide', 'tetrakis(triphenylphosphine) palladium(0)', '1,4-dioxane; water; 1,3-dioxane; water'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '20', '90 - 95', 80.0, 'potassium carbonate', '', '1,4-dioxane'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '', 70.0, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'ethanol; benzene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '', 62.7, 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', 'ethanol; water; toluene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '15', '85', 34.0, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'ethanol; water; benzene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '5.16667', '20', '', 'sodium carbonate', 'palladium diacetate; triphenylphosphine', 'tetrahydrofuran; water'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '', '', 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', '1,4-dioxane; water'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '', '', 'potassium carbonate; palladium', '', 'tetrahydrofuran'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '90', '', 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'ethanol; water; benzene'] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '', '', 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', ''] ,
+     ['OB(O)C1=CC=CS1.BrC1=CC=C(Br)C2=NSN=C12>>S1C=CC=C1C1=CC=C(C2=CC=CS2)C2=NSN=C12', '', '', '', 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', 'tetrahydrofuran'] ,
+     ['BrC1=CC=CC=C1.OB(O)C1=CC=CC2=C1SC1=CC=CC=C21>>S1C2=C(C=CC=C2)C2=C1C(=CC=C2)C1=CC=CC=C1', '20', '130', 93.0, 'potassium carbonate', '[Pd(C3H5)Cl]2/Tedicyp complex', 'xylene'] ,
+     ['BrC1=CC=CC=C1.OB(O)C1=CC=CC2=C1SC1=CC=CC=C21>>S1C2=C(C=CC=C2)C2=C1C(=CC=C2)C1=CC=CC=C1', '3', '100', 76.57, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'ethanol; toluene'] ,
+     ['BrC1=CC=CC=C1.OB(O)C1=CC=CC2=C1SC1=CC=CC=C21>>S1C2=C(C=CC=C2)C2=C1C(=CC=C2)C1=CC=CC=C1', '4', '90', 75.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'ethanol; water; toluene'] ,
+     ['BrC1=CC=CC=C1.OB(O)C1=CC=CC2=C1SC1=CC=CC=C21>>S1C2=C(C=CC=C2)C2=C1C(=CC=C2)C1=CC=CC=C1', '12', '', 74.0, 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', '1,4-dioxane; water'] ,
+     ['BrC1=CC=CC=C1.OB(O)C1=CC=CC2=C1SC1=CC=CC=C21>>S1C2=C(C=CC=C2)C2=C1C(=CC=C2)C1=CC=CC=C1', '18', '100', '', 'tetrakis(triphenylphosphine) palladium(0); potassium carbonate', '', 'ethanol; water; toluene'] ,
+     ['OB(O)C1=CC=C(C=C1)C(O)=O.BrC1=NC=CC=N1>>OC(=O)C1=CC=C(C=C1)C1=NC=CC=N1', '0.25', '140', 96.0, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'water; acetonitrile'] ,
+     ['OB(O)C1=CC=C(C=C1)C(O)=O.BrC1=NC=CC=N1>>OC(=O)C1=CC=C(C=C1)C1=NC=CC=N1', '17', '90', 89.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'acetonitrile'] ,
+     ['OB(O)C1=CC=C(C=C1)C(O)=O.BrC1=NC=CC=N1>>OC(=O)C1=CC=C(C=C1)C1=NC=CC=N1', '4', '90', '', 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', 'acetonitrile'] ,
+     ['OB(O)C1=CC=C(C=C1)C(O)=O.BrC1=NC=CC=N1>>OC(=O)C1=CC=C(C=C1)C1=NC=CC=N1', '', '', '', 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'acetonitrile'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '1', '20', 100.0, 'potassium phosphate monohydrate; R-Phos; bis(dibenzylideneacetone)-palladium(0)', '', 'tetrahydrofuran'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '1', '20', 99.0, 'dichloro bis(acetonitrile) palladium(II); C10H11N3S; potassium carbonate', '', 'water; N,N-dimethyl-formamide'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '14', '20', 98.0, "potassium fluoride; monophosphine 1,2,3,4,5-pentaphenyl-1'-(di-tert-butylphosphino)ferrocene; bis(dibenzylideneacetone)-palladium(0)", '', 'toluene'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '', '', 98.0, "monophosphine 1,2,3,4,5-pentaphenyl-1'-(di-tert-butylphosphino)ferrocene; bis(dibenzylideneacetone)-palladium(0)", '', 'tetrahydrofuran'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '0.333333', '20', 96.0, 'potassium fluoride', 'tris(dibenzylideneacetone)dipalladium (0); tri-tert-butyl phosphine', 'tetrahydrofuran'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '16', '20', 95.0, 'tetrabutylammomium bromide; caesium carbonate', 'tris(dibenzylideneacetone)dipalladium (0)', 'tetrahydrofuran; toluene'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '0.333333', '20', 95.0, 'palladium diacetate; potassium carbonate', '', 'water; isopropyl alcohol'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '0.333333', '20', 94.0, 'palladium diacetate; potassium carbonate; urea', '', 'water; isopropyl alcohol'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '2', '100', 93.0, '2C2H3O2(1-)*Pd(2+)*3Na(1+)*C18H12O9PS3(3-); potassium tert-butylate; glycerol', '', ''] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '2', '20', 92.0, '4-(di-tert-butylphosphino)-N,N-dimethylpiperidinium chloride; sodium carbonate', 'palladium diacetate', 'water; acetonitrile'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '', '20', 92.0, 'Cl- P(t-Bu)3CH(CH2CH2)2NMe2+; sodium carbonate', 'palladium diacetate', 'water; acetonitrile'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '2.5', '20', 90.0, 'palladium; potassium carbonate', '', 'methanol; acetonitrile'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '2', '65; 65', 89.0, 'potassium phosphate; 2C2F6NO4S2(1-)*C44H66Cl2N2P2Pd(2+); 1-butyl-methylpyrrolidinium bis(trifluoromethylsulfonyl)amide', '', 'water; water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '2', '109.84', 87.0, 'potassium phosphate; C17H14O*C108H156N3O6P9*3Pd', '', 'toluene'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '4', '60', 86.0, 'C21H28N2; potassium carbonate; palladium dichloride', '', 'water; N,N-dimethyl-formamide'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '18', '23', 86.0, '[(trineopentylphosphine)PdCl2]2; sodium carbonate', '', 'water; acetonitrile'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '20', '140', 85.0, 'potassium carbonate', 'bis(η3-allyl)palladium; Tedicyp', 'xylene'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '10', '20', 83.0, 'potassium carbonate', 'Pd(OAc)2*(1,1,3,3-tetramethyl-2-n-butylguanidine)2', 'ethanol; water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '7', '65', 80.0, 'potassium phosphate tribasic trihydrate', '', 'methanol'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '20', '100', 80.0, 'C23H22N4O3Pd*C7H8; potassium carbonate', '', 'water; N,N-dimethyl-formamide'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '6', '20', 68.0, 'C25H21NO; palladium diacetate; potassium carbonate', '', 'ethanol; water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '12', '70', 63.0, 'tetrakis(triphenylphosphine) palladium(0); sodium carbonate', '', 'tetrahydrofuran; water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '1', '100', 25.0, 'potassium phosphate; water', '', 'toluene'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '12', '70', 14.0, 'potassium hydroxide', '', 'methanol'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '', '100', '', 'cesium fluoride', '[2,6-dimesitylphenyl-PMe2PdCl2]2', '1,4-dioxane'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '4', '65', '', 'sodium hydroxide', '', 'tetrahydrofuran; water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '24', '50', '', 'potassium phosphate; tris-(dibenzylideneacetone)dipalladium(0); rac-1-(4-tert-butylphenoxy)-2-[bis(2-tolyl)phosphanyl]ferrocene', '', 'toluene'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '1', '65', '', 'sodium hydroxide', '', 'tetrahydrofuran'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '24', '70', '', 'potassium phosphate monohydrate; 5-(dicyclohexylphosphino)-1-([2.2]paracyclophan-4-yl)-4-pentyl-1H-1,2,3-triazole; palladium diacetate', '', 'toluene'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '15', '80', '', 'tetrabutylammomium bromide; potassium carbonate', '', 'water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '24', '100', '', 'potassium carbonate', '', 'water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '1', '80', '', 'potassium carbonate', '', 'water; N,N-dimethyl-formamide'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '2', '20', '', 'tetrabutylammomium bromide; potassium carbonate', '', 'ethanol; water'] ,
+     ['CC1=CC=CC=C1Br.CC1=C(C=CC=C1)B(O)O>>CC1=CC=CC=C1C1=CC=CC=C1C', '20', '65', '', 'potassium tert-butylate; C52H45ClN2Pd', '', 'tert-butyl alcohol'] ,
+     ['FC(F)(F)C1=CC(Cl)=CC=C1.OB(O)C1=CC=CC=C1>>FC(F)(F)C1=CC=CC(=C1)C1=CC=CC=C1', '12', '', 99.0, 'potassium phosphate', 'Pd(OAc)2*3H2O', '1,4-dioxane'] ,
+     ['FC(F)(F)C1=CC(Cl)=CC=C1.OB(O)C1=CC=CC=C1>>FC(F)(F)C1=CC=CC(=C1)C1=CC=CC=C1', '1', '100', 97.0, 'potassium phosphate; trans-chloro-(1-naphthyl)bis[tris-(4-methoxyphenyl)phosphane]-nickel(II)', '', '1,4-dioxane; water'] ,
+     ['FC(F)(F)C1=CC(Cl)=CC=C1.OB(O)C1=CC=CC=C1>>FC(F)(F)C1=CC=CC(=C1)C1=CC=CC=C1', '18', '120', 88.0, 'triisopropyl phosphite; sodium carbonate', 'palladium diacetate', 'toluene'] ,
+     ['FC(F)(F)C1=CC(Cl)=CC=C1.OB(O)C1=CC=CC=C1>>FC(F)(F)C1=CC=CC(=C1)C1=CC=CC=C1', '6', '100', 60.0, '2C2H4O2*C40H36N2O2Pd; potassium carbonate', '', 'N,N-dimethyl-formamide'] ,
+     ['FC(F)(F)C1=CC(Cl)=CC=C1.OB(O)C1=CC=CC=C1>>FC(F)(F)C1=CC=CC(=C1)C1=CC=CC=C1', '18', '80', '', 'potassium fluoride; potassium phosphate; p-(MeOPEG2000-OCH2)C6H4CH2P(1-adamantyl)2*HBr', 'sodium tetrachloropalladate', 'dimethyl sulfoxide'] ,
+     ['FC(F)(F)C1=CC(Cl)=CC=C1.OB(O)C1=CC=CC=C1>>FC(F)(F)C1=CC=CC(=C1)C1=CC=CC=C1', '', '', '', 'N,N-dimethyl acetamide; sodium carbonate', '', 'water'] ,
+     ['NC1=C(Br)C=CC=C1Br.CC(C)(C)C1=CC=C(C=C1)B(O)O>>CC(C)(C)C1=CC=C(C=C1)C1=CC=CC(C2=CC=C(C=C2)C(C)(C)C)=C1N', '96', '95', 96.0, 'tris(1,5-diphenylpenta-1,4-dien-3-one)dipalladium; anhydrous sodium carbonate; triphenylphosphine', '', 'ethanol; lithium hydroxide monohydrate; toluene'] ,
+     ['NC1=C(Br)C=CC=C1Br.CC(C)(C)C1=CC=C(C=C1)B(O)O>>CC(C)(C)C1=CC=C(C=C1)C1=CC=CC(C2=CC=C(C=C2)C(C)(C)C)=C1N', '48', '', 84.0, 'anhydrous sodium carbonate', 'tetrakis-(triphenylphosphine)-palladium', 'ethanol; benzene'] ,
+     ['NC1=C(Br)C=CC=C1Br.CC(C)(C)C1=CC=C(C=C1)B(O)O>>CC(C)(C)C1=CC=C(C=C1)C1=CC=CC(C2=CC=C(C=C2)C(C)(C)C)=C1N', '12', '20', 67.0, 'caesium fluoride', 'tris(1,5-diphenylpenta-1,4-dien-3-one)dipalladium; benzyl(di-tert-butyl)phosphane', '1,4-dioxane'] ,
+     ['NC1=C(Br)C=CC=C1Br.CC(C)(C)C1=CC=C(C=C1)B(O)O>>CC(C)(C)C1=CC=C(C=C1)C1=CC=CC(C2=CC=C(C=C2)C(C)(C)C)=C1N', '12', '90', 63.0, 'tetrakis-(triphenylphosphine)-palladium; potassium carbonate', '', 'ethanol; lithium hydroxide monohydrate; toluene'] ,
+     ['NC1=C(Br)C=CC=C1Br.CC(C)(C)C1=CC=C(C=C1)B(O)O>>CC(C)(C)C1=CC=C(C=C1)C1=CC=CC(C2=CC=C(C=C2)C(C)(C)C)=C1N', '72', '', 56.0, 'anhydrous sodium carbonate', 'tetrakis-(triphenylphosphine)-palladium', 'ethanol; benzene'] ,
+     ['NC1=C(Br)C=CC=C1Br.CC(C)(C)C1=CC=C(C=C1)B(O)O>>CC(C)(C)C1=CC=C(C=C1)C1=CC=CC(C2=CC=C(C=C2)C(C)(C)C)=C1N', '72', '', 56.0, 'tetrakis-(triphenylphosphine)-palladium; anhydrous sodium carbonate', '', 'ethanol; lithium hydroxide monohydrate; toluene'] ,
+     ['NC1=C(Br)C=CC=C1Br.CC(C)(C)C1=CC=C(C=C1)B(O)O>>CC(C)(C)C1=CC=C(C=C1)C1=CC=CC(C2=CC=C(C=C2)C(C)(C)C)=C1N', '', '', '', '', 'Pd(PPh3)4', ''] ,
+     ['OC1=CC=C(Br)C=C1.OB(O)C1=CC(=CC=C1)C#N>>OC1=CC=C(C=C1)C1=CC(=CC=C1)C#N', '48', '20', 65.0, 'potassium fluoride; tri-tert-butyl phosphine', 'tris-(dibenzylideneacetone)dipalladium(0)', 'tetrahydrofuran; tetrahydrofuran'] ,
+     ['OC1=CC=C(Br)C=C1.OB(O)C1=CC(=CC=C1)C#N>>OC1=CC=C(C=C1)C1=CC(=CC=C1)C#N', '2', '110', 44.0, 'sodium carbonate', 'tetrakis(triphenylphosphine) palladium(0)', '1,4-dioxane; water'] ,
+     ['OC1=CC=C(Br)C=C1.OB(O)C1=CC(=CC=C1)C#N>>OC1=CC=C(C=C1)C1=CC(=CC=C1)C#N', '0.166667', '20; 80', '', 'di-isopropyl azodicarboxylate; triphenylphosphine; Wang resin; sodium carbonate; trifluoroacetic acid', 'tetrakis(triphenylphosphine) palladium(0)', 'tetrahydrofuran; 1,2-dimethoxyethane; water; dichloromethane'] ,
+     ['OC1=CC=C(Br)C=C1.OB(O)C1=CC(=CC=C1)C#N>>OC1=CC=C(C=C1)C1=CC(=CC=C1)C#N', '8', '65 - 70', '', "1,1'-bis-(diphenylphosphino)ferrocene; palladium diacetate; potassium carbonate", '', '2-methyltetrahydrofuran; water'] ,
+     ['OC1=CC=C(Br)C=C1.OB(O)C1=CC(=CC=C1)C#N>>OC1=CC=C(C=C1)C1=CC(=CC=C1)C#N', '4', '20', '', 'tris-(dibenzylideneacetone)dipalladium(0); sodium carbonate; tri tert-butylphosphoniumtetrafluoroborate', '', 'tetrahydrofuran; water'] ,
+     ['OC1=CC=C(Br)C=C1.OB(O)C1=CC(=CC=C1)C#N>>OC1=CC=C(C=C1)C1=CC(=CC=C1)C#N', '', '80', '', "dichloro(1,1'-bis(diphenylphosphanyl)ferrocene)palladium(II)*CH2Cl2; sodium carbonate", '', '1,4-dioxane; water']
+
+]
+
+# Create a DataFrame from the data array
+data = pd.DataFrame(data_array[1:], columns=data_array[0])
+
+# Replace empty strings with NaN
+data = data.replace('', np.nan)
+
+# Print the shape of the data
+print(f'Shape of data after loading: {data.shape}')
+
+# Check the column names and strip whitespace
+data.columns = data.columns.str.strip()
 
 # Remove rows with missing values in the 'Time' column
-data = data.dropna(subset=['Time '])
+if 'Time' in data.columns:
+    data = data.dropna(subset=['Time'])
+else:
+    print("Column 'Time' not found in the DataFrame.")
 
-# One-hot encode the 'Reaction' column
-data = pd.get_dummies(data, columns=['Reaction'])
-# One-hot encode the column
-data = pd.get_dummies(data, columns=['Reagent'])
+# Check if DataFrame is empty after removing rows with missing values
+if data.empty:
+    print("No data available after removing rows with missing values.")
+    exit()
 
-# Define a function to split values like '8; 10' into multiple rows
+# Print the shape of the data
+print(f'Shape of data after removing rows with missing values: {data.shape}')
 
+# Check if 'Yield' column exists in the DataFrame
+if 'Yield' not in data.columns:
+    print("Column 'Yield' not found in the DataFrame.")
+    exit()
 
-def split_values(row, column):
-    value = row[column]
-    if isinstance(value, str):
-        if ';' in value:
-            values = [float(x) for x in value.split(';')]
-            return [row.to_dict() | {column: v} for v in values]
-        elif '-' in value:
-            values = [float(x) for x in value.split('-')]
-            avg_value = sum(values) / len(values)
-            return [row.to_dict() | {column: avg_value}]
-    return [row.to_dict()]
+# Drop rows with missing values in the target variable
+data = data.dropna(subset=['Yield'])
 
+# Check if DataFrame is empty after removing rows with missing values in the target variable
+if data.empty:
+    print("No data available after removing rows with missing values in the target variable.")
+    exit()
 
-# Apply the function to each row of the data
-rows = data.apply(lambda row: split_values(
-    row, 'Temperature '), axis=1).explode().tolist()
+# Check if 'Reaction' column exists in the DataFrame and drop it
+if 'Reaction' in data.columns:
+    data = data.drop(columns=['Reaction'])
 
-# Create a new DataFrame from the resulting rows
-data = pd.DataFrame(rows)
+# Convert boolean columns to integers (True=1, False=0)
+boolean_columns = data.select_dtypes(include=bool).columns
+data[boolean_columns] = data[boolean_columns].astype(int)
 
-# Apply the function to each row of the new data
-rows = data.apply(lambda row: split_values(
-    row, 'Time '), axis=1).explode().tolist()
+# Perform one-hot encoding on the categorical columns
+categorical_columns = ['Reagent', 'Catalyst', 'Solvent']
+data = pd.get_dummies(data, columns=categorical_columns)
 
-# Create a new DataFrame from the resulting rows
-data = pd.DataFrame(rows)
+# Separate numeric and non-numeric columns
+numeric_columns = ['Time', 'Temperature']
+non_numeric_columns = data.select_dtypes(exclude='number').columns
 
-# Check the data type of the 'Reagent' column
-if data['Reagent'].dtype != 'object':
-    # Convert the 'Reagent' column to string
-    data['Reagent'] = data['Reagent'].astype(str)
+# Create imputers for numeric and non-numeric columns
+numeric_imputer = SimpleImputer(strategy='mean')
+non_numeric_imputer = SimpleImputer(strategy='most_frequent')
 
-# Split the 'Reagent' column into multiple columns
-reagents = data['Reagent'].str.split(';', expand=True)
+# Fit the imputers on the training data
+numeric_imputer.fit(data[numeric_columns].apply(pd.to_numeric, errors='coerce'))
+non_numeric_imputer.fit(data[non_numeric_columns])
 
-# Rename the new columns
-reagents.columns = [f'Reagent {i+1}' for i in range(reagents.shape[1])]
+# Apply the imputers to fill missing values in the data
+data[numeric_columns] = numeric_imputer.transform(data[numeric_columns].apply(pd.to_numeric, errors='coerce'))
+data[non_numeric_columns] = non_numeric_imputer.transform(data[non_numeric_columns])
 
-# Concatenate the new columns with the original data
-data = pd.concat([data, reagents], axis=1)
-
-catalysts = data['Catalyst'].str.split(';', expand=True)
-catalysts.columns = [f'Catalyst {i+1}' for i in range(catalysts.shape[1])]
-
-data = pd.concat([data, catalysts], axis=1)
-
-solvents = data['Solvent'].str.split(';', expand=True)
-solvents.columns = [f'Solvent {i+1}' for i in range(solvents.shape[1])]
-
-data = pd.concat([data, solvents], axis=1)
-
-# Drop the original 'Catalyst' and 'Solvent' columns
-data = data.drop(['Catalyst', 'Solvent'], axis=1)
-
-# One-hot encode the catalyst and solvent columns
-data = pd.get_dummies(data, columns=catalysts.columns)
-data = pd.get_dummies(data, columns=solvents.columns)
-
-# Split the data into features and target
-X = data.drop('Yield', axis=1)
+# Separate the features and target variable
+X = data.drop(columns=['Yield'])
 y = data['Yield']
 
 # Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Create a SimpleImputer instance
-imputer = SimpleImputer(strategy='mean')
+# Create the random forest regressor
+regressor = RandomForestRegressor(random_state=42)
 
-# Fit the imputer on the training data
-imputer.fit(X_train)
+# Fit the regressor to the training data
+regressor.fit(X_train, y_train)
 
-# Transform the training and test data
-X_train = imputer.transform(X_train)
-X_test = imputer.transform(X_test)
+# Predict the target variable for the test data
+y_pred = regressor.predict(X_test)
 
-# Create a random forest regressor
-model = RandomForestRegressor()
+# Calculate the mean absolute error
+mae = np.mean(np.abs(y_pred - y_test))
+print(f'Mean Absolute Error: {mae}')
 
-# Train the model
-model.fit(X_train, y_train)
+# Create a figure and axis objects
+fig, ax = plt.subplots()
 
-# Make predictions on the test set
-y_pred = model.predict(X_test)
+# Plot the predicted values
+ax.plot(y_test, label='Actual')
+ax.plot(y_pred, label='Predicted')
 
-# Evaluate the model
-score = model.score(X_test, y_test)
-print(f'Test score: {score:.2f}')
+# Set labels and title
+ax.set_xlabel('Sample')
+ax.set_ylabel('Yield')
+ax.set_title('Actual vs. Predicted Yield')
+
+# Add a legend
+ax.legend()
+
+# Show the plot
+plt.show()
