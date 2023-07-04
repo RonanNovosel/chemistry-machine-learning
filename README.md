@@ -40,3 +40,5 @@ FUTURE IDEAS
 - Heavy metal minimizer: This machine learning model would use data on the properties and behavior of heavy metals in chemical processes to predict how to minimize their use. It could be used to help chemists design more sustainable and environmentally friendly chemical processes.
 
 - Research topic analyzer: This AI system would use machine learning algorithms to analyze data on research topics in chemistry, such as publications, grants, and collaborations, to identify trends and directions in research. It could be used to help chemists stay up-to-date with the latest developments in their field and identify new areas for research.
+
+- Chemical concept explainer. High-level chat Ai to explain problems with understanding of chemistry.
