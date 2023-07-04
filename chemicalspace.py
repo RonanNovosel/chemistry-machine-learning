@@ -19,38 +19,56 @@ logP = df[1].tolist()
 # Convert SMILES strings to molecules and check for invalid SMILES
 mols = []
 valid_logP = []
+invalid_smiles = []
+
 for i, smi in enumerate(smiles):
     mol = Chem.MolFromSmiles(smi)
     if mol is None:
-        print(f'Invalid SMILES string: {smi}')
+        invalid_smiles.append(smi)
     else:
         mols.append(mol)
         valid_logP.append(logP[i])
 
-# Calculate molecular descriptors
+# Print invalid SMILES
+if invalid_smiles:
+    print('Invalid SMILES strings:')
+    for smi in invalid_smiles:
+        print(smi)
+
+# Calculate molecular descriptors using list comprehension
 X = np.array([calc_descriptors(mol) for mol in mols])
 
 # Perform PCA to reduce the dimensionality of the data
 pca = PCA(n_components=3)
 X_pca = pca.fit_transform(X)
 
-# Create a 3D plot with a black background and colored points
-fig = plt.figure()
+# Create a 3D plot with black background and adjusted color map
+fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, projection='3d')
-sc = ax.scatter(X_pca[:, 0], X_pca[:, 1], X_pca[:, 2], c=valid_logP, cmap='viridis')
+scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], X_pca[:, 2], c=valid_logP, cmap='plasma', alpha=0.7)
 ax.set_facecolor('black')
-ax.set_xlabel('PC1')
-ax.set_ylabel('PC2')
-ax.set_zlabel('PC3')
-plt.colorbar(sc, label='LogP')
-plt.title('Chemical Space')
+ax.set_xlabel('PC1', fontsize=12, labelpad=12)
+ax.set_ylabel('PC2', fontsize=12, labelpad=12)
+ax.set_zlabel('PC3', fontsize=12, labelpad=12)
+ax.tick_params(axis='x', labelsize=10)
+ax.tick_params(axis='y', labelsize=10)
+ax.tick_params(axis='z', labelsize=10)
+
+# Customize colorbar
+cbar = plt.colorbar(scatter, fraction=0.046, pad=0.04)
+cbar.set_label('LogP', fontsize=12)
+cbar.ax.tick_params(labelsize=10)
+
+# Add a title and adjust plot layout
+plt.title('Chemical Space', fontsize=14, pad=20)
+plt.tight_layout()
 
 # Add a legend to show which molecular descriptors were used
 legend_elements = [
-    plt.Line2D([], [], marker='', linestyle='', label='Molecular Weight'),
-    plt.Line2D([], [], marker='', linestyle='', label='TPSA'),
-    plt.Line2D([], [], marker='', linestyle='', label='Num Rotatable Bonds'),
+    plt.Line2D([], [], marker='o', color='w', markerfacecolor='black', markersize=8, label='Molecular Weight'),
+    plt.Line2D([], [], marker='o', color='w', markerfacecolor='darkblue', markersize=8, label='TPSA'),
+    plt.Line2D([], [], marker='o', color='w', markerfacecolor='darkgreen', markersize=8, label='Num Rotatable Bonds'),
 ]
-plt.legend(handles=legend_elements, loc='best')
+plt.legend(handles=legend_elements, loc='best', prop={'size': 10})
 
 plt.show()
