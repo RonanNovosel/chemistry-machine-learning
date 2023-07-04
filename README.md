@@ -10,7 +10,6 @@ This is purely for personal use, both as a student and a proffesional chemist
 ~ xoxoxo
 
 
-### Focuses ###
 
     The main projects currently are:
         - A simple test of a cheminformatics predictor for LogP using SMILES as the input. This is done mainly as a tutorial, but I will copy the code and expand the data set to reflect a wider spectrum of chemical space. Also, I would like to optimise the descriptors that are most relevant to the problem. I also would like to analyse and use a different machine learning technique, such as a multi-task solver or indeed implementing computational chemistry to determine new, specific descriptors. 
