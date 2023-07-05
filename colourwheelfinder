@@ -1,0 +1,70 @@
+
+#Being honest this is just for finding outfits that match
+
+
+import colorsys
+import matplotlib.pyplot as plt
+
+def hex_to_rgb(hex_code):
+    # Convert hex code to RGB values
+    hex_code = hex_code.lstrip('#')
+    return tuple(int(hex_code[i:i+2], 16) / 255 for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    # Convert RGB values to hex code
+    return '#{:02x}{:02x}{:02x}'.format(int(rgb[0] * 255), int(rgb[1] * 255), int(rgb[2] * 255))
+
+def generate_analogous_colors(hex_code):
+    rgb = hex_to_rgb(hex_code)
+    hls = colorsys.rgb_to_hls(rgb[0], rgb[1], rgb[2])
+    h = hls[0]
+    l = hls[1]
+    s = hls[2]
+    
+    # Generate analogous color
+    h_shifted = (h + 180) % 360
+    rgb_shifted = colorsys.hls_to_rgb(h_shifted, l, s)
+    hex_shifted = rgb_to_hex(rgb_shifted)
+
+    return hex_shifted
+
+def generate_complimentary_color(hex_code):
+    rgb = hex_to_rgb(hex_code)
+    hls = colorsys.rgb_to_hls(rgb[0], rgb[1], rgb[2])
+    h = (hls[0] + 0.5) % 1
+    l = hls[1]
+    s = hls[2]
+    rgb_complimentary = colorsys.hls_to_rgb(h, l, s)
+    hex_complimentary = rgb_to_hex(rgb_complimentary)
+    return hex_complimentary
+
+# Get hex code from user
+hex_code = input("Enter the hex code: ")
+
+analogous_color = generate_analogous_colors(hex_code)
+complimentary_color = generate_complimentary_color(hex_code)
+
+# Convert colors to RGB
+rgb_colors = [hex_to_rgb(color) for color in [hex_code, analogous_color, complimentary_color]]
+
+# Display color swatch
+fig, ax = plt.subplots(figsize=(10, 2))
+labels = ["Original Color"]
+if analogous_color:
+    labels.append("Analogous Color")
+labels.append("Complimentary Color")
+
+for i, (color, label) in enumerate(zip(rgb_colors, labels)):
+    ax.add_patch(plt.Rectangle((i, 0), 1, 1, color=color))
+    ax.text(i + 0.5, 0.5, label, ha='center', va='center', color='black' if color[0] + color[1] + color[2] < 1.5 else 'white')
+
+ax.set_xlim(0, len(rgb_colors))
+ax.set_ylim(0, 1)
+ax.axis('off')
+plt.tight_layout()
+plt.show()
+
+print("Original Color:", hex_code)
+if analogous_color:
+    print("Analogous Color:", analogous_color)
+print("Complimentary Color:", complimentary_color)
